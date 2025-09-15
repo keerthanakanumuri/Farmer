@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>किसान साथी • Farmer Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root{
+      --green-700:#1e7a3a; --green-500:#2e8b3e; --muted:#6b7280; --card:#ffffff; --glass: rgba(255,255,255,0.06);
+      --radius:14px; --shadow: 0 8px 24px rgba(8,15,24,0.06);
+    }
+    *{box-sizing:border-box}
+    body{font-family: Inter, 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial; margin:0; background:#f4f7fb; color:#0f172a}
+
+    /* SIDEBAR */
+    .sidebar{position:fixed;left:0;top:0;height:100vh;width:260px;background:linear-gradient(180deg,var(--green-700),var(--green-500));color:#fff;padding:22px;display:flex;flex-direction:column;gap:8px;transition:width .28s ease}
+    .sidebar.collapsed{width:80px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand img{width:50px;height:50px;border-radius:10px;object-fit:cover;border:2px solid rgba(255,255,255,0.12)}
+    .brand .title{font-weight:700;font-size:16px;line-height:1}
+    .brand .subtitle{font-size:12px;opacity:.9}
+
+    .nav{margin-top:14px;display:flex;flex-direction:column;gap:4px}
+    .nav a{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;color:#fff;text-decoration:none;font-weight:600}
+    .nav a .icon{width:26px;text-align:center}
+    .nav a.active{background:rgba(255,255,255,0.08)}
+    .nav a:hover{background:rgba(255,255,255,0.06)}
+
+    .sidebar .bottom{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+    .small{font-size:12px;opacity:.9}
+
+    /* TOPBAR */
+    .topbar{position:fixed;left:260px;right:0;top:0;height:72px;background:white;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #eef2f7;transition:left .28s ease}
+    .sidebar.collapsed ~ .topbar{left:80px}
+
+    .top-left{display:flex;align-items:center;gap:14px}
+    .hambtn{background:transparent;border:0;font-size:20px;cursor:pointer}
+    .page-title{font-size:18px;font-weight:700;color:var(--green-700)}
+
+    .top-right{display:flex;align-items:center;gap:12px}
+    .lang-buttons button{border:0;background:transparent;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700}
+    .lang-buttons button.active{background:var(--green-500);color:#fff}
+
+    .notif{position:relative;cursor:pointer;font-size:18px}
+    .badge{position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:11px;padding:3px 6px;border-radius:999px;font-weight:700}
+
+    .profile{display:flex;align-items:center;gap:10px}
+    .profile img{width:42px;height:42px;border-radius:10px;object-fit:cover}
+    .profile .name{font-weight:700}
+    .profile .role{font-size:12px;color:var(--muted)}
+
+    /* MAIN */
+    main{margin-left:260px;margin-top:72px;padding:26px;transition:margin-left .28s ease}
+    .sidebar.collapsed ~ main{margin-left:80px}
+
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:var(--shadow)}
+    .card.col-span-3{grid-column:span 3}
+    .card.col-span-6{grid-column:span 6}
+    .card.col-span-12{grid-column:span 12}
+
+    .stat{display:flex;justify-content:space-between;align-items:center}
+    .stat .left{display:flex;flex-direction:column}
+    .stat .value{font-weight:800;font-size:20px}
+    .stat .label{font-size:13px;color:var(--muted)}
+
+    /* products table */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;text-align:left;border-bottom:1px solid #eef2f7}
+    th{color:var(--muted);font-weight:700}
+
+    /* add product form */
+    .form-row{display:flex;gap:12px}
+    .form-row input,.form-row select, textarea{flex:1;padding:10px;border-radius:8px;border:1px solid #e6eef3}
+    .btn{background:var(--green-700);color:white;padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
+    .btn.ghost{background:transparent;color:var(--green-700);border:1px solid rgba(30,122,58,0.12)}
+
+    /* contracts tabs */
+    .tabs{display:flex;gap:8px;margin-bottom:12px}
+    .tabs button{padding:8px 12px;border-radius:8px;border:1px solid #e6eef3;background:#fff;cursor:pointer}
+    .tabs button.active{background:var(--green-500);color:#fff;border-color:var(--green-500)}
+
+    /* responsive */
+    @media(max-width:900px){
+      .sidebar{left:-100%;position:fixed;transform:translateX(-20px)}
+      .topbar{left:0}
+      main{margin-left:0;margin-top:72px;padding:12px}
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder" alt="farm">
+      <div>
+        <div class="title" data-i18n="portalName">किसान साथी</div>
+        <div class="subtitle small" data-i18n="portalSub">Farmer Portal</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <a href="#" data-view="overview" class="active"><span class="icon"><i class="fas fa-chart-line"></i></span><span class="label" data-i18n="navOverview">Overview</span></a>
+      <a href="#" data-view="add"><span class="icon"><i class="fas fa-plus-circle"></i></span><span class="label" data-i18n="navAdd">Add Products</span></a>
+      <a href="#" data-view="products"><span class="icon"><i class="fas fa-box-open"></i></span><span class="label" data-i18n="navProducts">My Products</span></a>
+      <a href="#" data-view="contracts"><span class="icon"><i class="fas fa-file-pen"></i></span><span class="label" data-i18n="navContracts">Contracts</span><span id="contractsBadge" class="badge" style="position:static;margin-left:auto;background:#fde68a;color:#92400e;display:none">0</span></a>
+      <a href="#" data-view="profile"><span class="icon"><i class="fas fa-user"></i></span><span class="label" data-i18n="navProfile">Profile</span></a>
+    </nav>
+
+    <div class="bottom small">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="flex:1">
+          <div data-i18n="signedIn">Signed in as</div>
+          <div id="userName" style="font-weight:800">Ramesh Kumar</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="collapseBtn" class="btn ghost">Collapse</button>
+        <button id="logoutSidebar" class="btn">Logout</button>
+      </div>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <div class="top-left">
+      <button class="hambtn" id="hamburger"><i class="fas fa-bars"></i></button>
+      <div class="page-title" id="pageTitle">Overview</div>
+    </div>
+
+    <div class="top-right">
+      <div class="lang-buttons" aria-label="language selector">
+        <button id="lang-te" class="lang-btn">తెలుగు</button>
+        <button id="lang-hi" class="lang-btn">हिंदी</button>
+        <button id="lang-en" class="lang-btn active">English</button>
+      </div>
+
+      <div class="notif" id="notifBtn" title="Notifications">
+        <i class="fas fa-bell"></i>
+        <span class="badge" id="notifCount" style="display:none">0</span>
+      </div>
+
+      <div class="profile" style="margin-left:8px">
+        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder" alt="user" id="profilePic">
+        <div>
+          <div class="name" id="profileName">Ramesh Kumar</div>
+          <div class="role" id="profileRole">Farmer</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+  <!-- Overview -->
+<section id="view-overview" class="view">
+  <div class="grid" style="gap:24px; margin-top:20px;">
+
+   <!-- Farmer Profile Card -->
+<div class="card col-span-4 profile-card">
+  <h3>Farmer Profile</h3>
+  <div class="profile-content">
+    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop" 
+         alt="farmer">
+    <div>
+      <div class="profile-name" id="overviewName">Ramesh Kumar</div>
+      <div class="profile-detail" id="overviewLoc">📍 Andhra Pradesh</div>
+      <div class="profile-detail" id="overviewAge">👤 Age: 42</div>
+      <div class="profile-detail" id="overviewContact">📞 +91 9876543210</div>
+    </div>
+  </div>
+</div>
+
+
+    <!-- Products Selling -->
+    <div class="card col-span-8" style="padding:20px;">
+      <h3 style="margin-bottom:15px;">Products Selling</h3>
+      <table style="width:100%;border-collapse:separate;border-spacing:0 12px;">
+        <thead>
+          <tr style="text-align:left;font-size:15px;color:#555;">
+            <th>Crop</th><th>Quantity</th><th>Price (₹)</th>
+          </tr>
+        </thead>
+        <tbody id="overviewProducts">
+          <tr style="background:#f9f9f9;border-radius:8px;">
+            <td>Wheat</td><td>500 kg</td><td>₹25/kg</td>
+          </tr>
+          <tr style="background:#f9f9f9;border-radius:8px;">
+            <td>Tomatoes</td><td>200 kg</td><td>₹30/kg</td>
+          </tr>
+          <tr style="background:#f9f9f9;border-radius:8px;">
+            <td>Onions</td><td>150 kg</td><td>₹20/kg</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+
+
+    <!-- Add Product -->
+    <section id="view-add" class="view" style="display:none">
+      <div class="card col-span-12">
+        <h3 data-i18n="addNewProduct">Add New Product</h3>
+        <form id="addProductForm" style="margin-top:12px">
+          <div class="form-row">
+            <input name="title" placeholder="Crop name" required />
+            <input name="price" placeholder="Price per unit (₹)" type="number" required />
+          </div>
+          <div style="margin-top:8px" class="form-row">
+            <input name="quantity" placeholder="Quantity (kg)" type="number" required />
+            <input name="harvest" type="date" />
+          </div>
+          <div style="margin-top:8px">
+            <textarea name="desc" placeholder="Description (optional)" rows="3"></textarea>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <input type="file" id="prodImage" accept="image/*" />
+        
+            <div style="margin-top:12px">
+            <button type="submit" class="btn">Add Product</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Products -->
+    <section id="view-products" class="view" style="display:none">
+      <div class="card col-span-12">
+        <h3 data-i18n="myProducts">My Products</h3>
+        <div style="overflow:auto;margin-top:12px">
+          <table id="productsTable">
+            <thead><tr><th>Image</th><th data-i18n="colName">Name</th><th data-i18n="colPrice">Price</th><th data-i18n="colQty">Quantity</th><th data-i18n="colActions">Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contracts -->
+    <section id="view-contracts" class="view" style="display:none">
+      <div class="card col-span-12">
+        <h3 data-i18n="contractsHeading">Contracts</h3>
+        <div class="tabs">
+          <button class="active" data-tab="ongoing">Ongoing</button>
+          <button data-tab="completed">Completed</button>
+          <button data-tab="previous">Previous/Expired</button>
+        </div>
+        <div id="contractsList"></div>
+      </div>
+    </section>
+
+    <!-- Profile -->
+    <section id="view-profile" class="view" style="display:none">
+      <div class="card col-span-6">
+        <h3 data-i18n="profileHeading">Profile</h3>
+        <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+          <img id="profilePicLarge" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder" style="width:90px;height:90px;border-radius:12px;object-fit:cover"/>
+          <div>
+            <div id="profileNameLarge" style="font-weight:800">Ramesh Kumar</div>
+            <div id="profileLoc">Andhra Pradesh</div>
+            <div style="margin-top:8px"><button class="btn ghost" onclick="editProfile()">Edit Profile</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // --- TRANSLATIONS ---
+    const TRANSLATIONS = {
+      en: { portalName: 'Kisan Saathi', portalSub: 'Farmer Portal', navOverview:'Overview', navAdd:'Add Products', navProducts:'My Products', navContracts:'Contracts', navProfile:'Profile', signedIn:'Signed in as', earnings:'Total earnings', activeContracts:'Active contracts', pendingOrders:'Pending deliveries', listedProducts:'Listed products', marketInsights:'Market Insights', marketInsightsDesc:'Price trends for your crops (demo)', quickActions:'Quick Actions', addProductBtn:'Add Product', viewContractsBtn:'View Contracts', manageProductsBtn:'Manage Products', addNewProduct:'Add New Product', myProducts:'My Products', colName:'Name', colPrice:'Price', colQty:'Quantity', colActions:'Actions', contractsHeading:'Contracts', profileHeading:'Profile'},
+      hi: { portalName: 'किसान साथी', portalSub: 'किसान पोर्टल', navOverview:'अवलोकन', navAdd:'उत्पाद जोड़ें', navProducts:'मेरे उत्पाद', navContracts:'अनुबंध', navProfile:'प्रोफ़ाइल', signedIn:'साइन इन', earnings:'कुल आय', activeContracts:'सक्रिय अनुबंध', pendingOrders:'लंबित डिलीवरी', listedProducts:'सूचीबद्ध उत्पाद', marketInsights:'बाज़ार अंतर्दृष्टि', marketInsightsDesc:'आपकी फसलों के लिए मूल्य प्रवृत्तियाँ (डेमो)', quickActions:'त्वरित क्रियाएँ', addProductBtn:'उत्पाद जोड़ें', viewContractsBtn:'अनुबंध देखें', manageProductsBtn:'उत्पाद प्रबंधित करें', addNewProduct:'नया उत्पाद जोड़ें', myProducts:'मेरे उत्पाद', colName:'नाम', colPrice:'मूल्य', colQty:'मात्रा', colActions:'क्रियाएँ', contractsHeading:'अनुबंध', profileHeading:'प्रोफ़ाइल'},
+      te: { portalName: 'కిసాన్ సాథీ', portalSub: 'ఫార్మర్ పోర్టల్', navOverview:'అవలోకనం', navAdd:'ఉత్పత్తులు జోడించండి', navProducts:'నా ఉత్పత్తులు', navContracts:'ఒప్పందాలు', navProfile:'ప్రొఫైల్', signedIn:'సైన్ ఇన్', earnings:'మొత్తం ఆదాయం', activeContracts:'చలించు ఒప్పందాలు', pendingOrders:'పెండింగ్ డెలివరీలు', listedProducts:'జాబితా చేయబడిన ఉత్పత్తులు', marketInsights:'మార్కెట్ అవగాహనలు', marketInsightsDesc:'మీ ఫసలుకు ధర ధోరణులు (డెమో)', quickActions:'తక్షణ చర్యలు', addProductBtn:'ఉత్పత్తి జోడించండి', viewContractsBtn:'ఒప్పందాలను వీక్షించండి', manageProductsBtn:'ఉత్పత్తులను నిర్వహించండి', addNewProduct:'కొత్త ఉత్పత్తి జోడించండి', myProducts:'నా ఉత్పత్తులు', colName:'పేరు', colPrice:'ధర', colQty:'కొత్త', colActions:'చర్యలు', contractsHeading:'ఒప్పందాలు', profileHeading:'ప్రొఫైల్'}
+    };
+
+    // Apply translation to all [data-i18n] elements
+    function applyLanguage(lang){
+      document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const key = el.getAttribute('data-i18n');
+        if(TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) el.innerText = TRANSLATIONS[lang][key];
+      });
+      // update buttons active state
+      document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+      document.getElementById('lang-' + lang).classList.add('active');
+    }
+
+    // initial language
+    let currentLang = localStorage.getItem('kisan_lang') || 'en';
+    applyLanguage(currentLang);
+
+    // language buttons
+    document.getElementById('lang-en').addEventListener('click',()=>{currentLang='en';localStorage.setItem('kisan_lang','en');applyLanguage('en');});
+    document.getElementById('lang-hi').addEventListener('click',()=>{currentLang='hi';localStorage.setItem('kisan_lang','hi');applyLanguage('hi');});
+    document.getElementById('lang-te').addEventListener('click',()=>{currentLang='te';localStorage.setItem('kisan_lang','te');applyLanguage('te');});
+
+    // Sidebar nav
+    document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault(); document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active')); a.classList.add('active'); navTo(a.dataset.view);}));
+
+    function hideAllViews(){ document.querySelectorAll('.view').forEach(v=>v.style.display='none'); }
+    function navTo(view){ hideAllViews(); const el = document.getElementById('view-' + view); if(el) el.style.display='block'; document.getElementById('pageTitle').innerText = document.querySelector('.nav a.active .label').innerText; }
+
+    // Sidebar collapse
+    const sidebar = document.getElementById('sidebar');
+    document.getElementById('collapseBtn').addEventListener('click', ()=>{ sidebar.classList.toggle('collapsed'); document.querySelector('.topbar').style.left = sidebar.classList.contains('collapsed')? '80px':'260px'; document.querySelector('main').style.marginLeft = sidebar.classList.contains('collapsed')? '80px':'260px'; });
+    document.getElementById('hamburger').addEventListener('click', ()=>{ sidebar.classList.toggle('collapsed'); document.querySelector('.topbar').style.left = sidebar.classList.contains('collapsed')? '80px':'260px'; document.querySelector('main').style.marginLeft = sidebar.classList.contains('collapsed')? '80px':'260px'; });
+
+    // Products handling (basic localStorage demo)
+    let products = JSON.parse(localStorage.getItem('kisan_products')||'[]');
+    function renderProducts(){
+      const tbody = document.querySelector('#productsTable tbody'); tbody.innerHTML='';
+      products.forEach((p,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td style="width:80px"><img src="${p.img||'https://via.placeholder.com/80'}" style="width:70px;height:50px;object-fit:cover;border-radius:6px"/></td><td>${p.title}</td><td>₹${p.price}</td><td>${p.quantity} kg</td><td><button onclick="editProduct(${i})" class="btn ghost">Edit</button> <button onclick="deleteProduct(${i})" class="btn">Delete</button></td>`;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('listedProducts').innerText = products.length;
+      localStorage.setItem('kisan_products', JSON.stringify(products));
+    }
+
+    document.getElementById('addProductForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const p = { title: fd.get('title'), price: Number(fd.get('price')||0), quantity: Number(fd.get('quantity')||0), harvest: fd.get('harvest'), desc: fd.get('desc') };
+      // image placeholder handling simplified
+      const file = document.getElementById('prodImage').files[0];
+      if(file){
+        const reader = new FileReader(); reader.onload = function(evt){ p.img = evt.target.result; products.push(p); renderProducts(); e.target.reset(); navTo('products'); alert('Product added'); };
+        reader.readAsDataURL(file);
+      } else { products.push(p); renderProducts(); e.target.reset(); navTo('products'); alert('Product added'); }
+    });
+
+    function editProduct(i){ const p = products[i]; const title = prompt('Edit product name', p.title); if(title!=null){products[i].title = title; renderProducts();} }
+    function deleteProduct(i){ if(confirm('Delete this product?')){ products.splice(i,1); renderProducts(); }}
+
+    // initial render
+    renderProducts();
+
+    // Contracts demo
+    let contracts = JSON.parse(localStorage.getItem('kisan_contracts')||JSON.stringify([{id:'C1001',buyer:'Retail Mart',qty:100,price:25,status:'ongoing'},{id:'C1002',buyer:'Hotel Sunrise',qty:50,price:40,status:'ongoing'}]));
+    function renderContracts(tab='ongoing'){
+      const list = document.getElementById('contractsList'); list.innerHTML='';
+      const filtered = contracts.filter(c=> tab==='ongoing'? c.status==='ongoing' : tab==='completed'? c.status==='completed' : (c.status!=='ongoing' && c.status!=='completed'));
+      if(filtered.length===0) list.innerHTML='<div class="card">No contracts</div>';
+      filtered.forEach(c=>{ const el = document.createElement('div'); el.className='card'; el.style.marginBottom='10px'; el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${c.id}</strong> — ${c.buyer}</div><div>${c.status}</div></div><div style="margin-top:6px">Qty: ${c.qty} kg • ₹${c.price}/kg</div>`; list.appendChild(el); });
+      // update badge
+      const pending = contracts.filter(c=>c.status==='ongoing').length; const badge = document.getElementById('contractsBadge'); badge.style.display = pending>0? 'inline-block':'none'; badge.innerText = pending;
+      document.getElementById('activeContracts').innerText = pending;
+    }
+    // tab buttons
+    document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click', ()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderContracts(b.dataset.tab); }));
+    renderContracts('ongoing');
+
+    // notifications (simple demo)
+    let notifications = JSON.parse(localStorage.getItem('kisan_notifs')||JSON.stringify([{id:1,text:'New offer from Retail Mart'},{id:2,text:'Payment received for C1000'}]));
+    function renderNotifCount(){ const c = notifications.length; const n = document.getElementById('notifCount'); if(c>0){ n.style.display='inline-block'; n.innerText = c; } else n.style.display='none'; }
+    renderNotifCount();
+
+    document.getElementById('notifBtn').addEventListener('click', ()=>{
+      if(notifications.length===0) return alert('No notifications');
+      let html = 'Notifications:\n\n'; notifications.forEach(n=> html += `• ${n.text}\n`); alert(html);
+      // mark read
+      notifications = []; localStorage.setItem('kisan_notifs', JSON.stringify(notifications)); renderNotifCount();
+    });
+
+    // profile edit
+    function editProfile(){ const name = prompt('Your name', document.getElementById('profileNameLarge').innerText); if(name){ document.getElementById('profileName').innerText = name; document.getElementById('profileNameLarge').innerText = name; document.getElementById('userName').innerText = name; localStorage.setItem('kisan_user', JSON.stringify({name})); }}
+    // load saved user
+    const user = JSON.parse(localStorage.getItem('kisan_user')||'{}'); if(user.name){ document.getElementById('profileName').innerText = user.name; document.getElementById('profileNameLarge').innerText = user.name; document.getElementById('userName').innerText = user.name; }
+
+    // logout
+    document.getElementById('logoutSidebar').addEventListener('click', ()=>{ if(confirm('Logout?')){ alert('Logged out (demo)'); }});
+
+    // initial nav
+    navTo('overview');
+
+    // make i18n initial apply (ensures dynamic elements update)
+    applyLanguage(currentLang);
+  </script>
+</body>
+</html>
