@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>किसान साथी • Farmer Dashboard</title>
+
+  <!-- Font Awesome & Chart.js -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">
+      <img id="brandLogo" src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=400&auto=format&fit=crop" alt="logo">
+      <div>
+        <div class="title" data-i18n="portalName">किसान साथी</div>
+        <div class="subtitle small" data-i18n="portalSub">Farmer Portal</div>
+      </div>
+    </div>
+
+    <nav id="mainNav" class="nav">
+      <a href="#" data-view="overview" class="active"><i class="fas fa-chart-line"></i><span data-i18n="navOverview">Overview</span></a>
+      <a href="#" data-view="add"><i class="fas fa-plus-circle"></i><span data-i18n="navAdd">Add Products</span></a>
+      <a href="#" data-view="products"><i class="fas fa-box-open"></i><span data-i18n="navProducts">My Products</span></a>
+      <a href="#" data-view="waste"><i class="fas fa-recycle"></i><span data-i18n="navWaste">Agro Waste</span></a>
+      <a href="#" data-view="contracts"><i class="fas fa-file-pen"></i><span data-i18n="navContracts">Contracts</span></a>
+      <a href="#" data-view="profile"><i class="fas fa-user"></i><span data-i18n="navProfile">Profile</span></a>
+    </nav>
+
+    <div class="bottom small">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="flex:1">
+          <div data-i18n="signedIn">Signed in as</div>
+          <div id="sideUserName" style="font-weight:800">Farmer</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="collapseBtn" class="btn ghost">Collapse</button>
+        <button id="logoutBtn" class="btn">Logout</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <div class="top-left">
+        <button id="hamburger" class="hambtn"><i class="fas fa-bars"></i></button>
+        <div class="page-title" id="pageTitle">Overview</div>
+      </div>
+
+      <div class="top-right">
+        <div class="lang-buttons" role="tablist" aria-label="language selector">
+          <button class="lang-btn" id="lang-te">తెలుగు</button>
+          <button class="lang-btn" id="lang-hi">हिंदी</button>
+          <button class="lang-btn active" id="lang-en">English</button>
+        </div>
+
+        <div id="notifBtn" class="notif" title="Notifications" aria-live="polite">
+          <i class="fas fa-bell"></i>
+          <span id="notifCount" class="badge" style="display:none">0</span>
+        </div>
+
+        <div class="profile top-profile" title="Profile">
+          <img id="topProfilePic" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&auto=format&fit=crop" alt="user">
+          <div>
+            <div id="topUserName">Ramesh Kumar</div>
+            <div id="topUserRole" class="small">Farmer</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="mainContent" class="content">
+      <!-- VIEWS: overview / add / products / waste / contracts / profile -->
+
+      <!-- Overview -->
+      <section id="view-overview" class="view">
+        <div class="grid">
+          <div class="card col-4 profile-card">
+            <h3 data-i18n="farmerProfile">Farmer Profile</h3>
+            <div class="profile-content">
+              <img id="overviewPic" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop" alt="farmer">
+              <div>
+                <div id="overviewName" class="profile-name">Ramesh Kumar</div>
+                <div id="overviewLoc" class="profile-detail">📍 Andhra Pradesh</div>
+                <div id="overviewAge" class="profile-detail">👤 Age: 42</div>
+                <div id="overviewContact" class="profile-detail">📞 +91 9876543210</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card col-4">
+            <div class="small" data-i18n="listedProducts">Listed Products</div>
+            <div class="stat-value" id="statProducts">0</div>
+          </div>
+
+          <div class="card col-4">
+            <div class="small" data-i18n="wasteItems">Agro Waste Items</div>
+            <div class="stat-value" id="statWaste">0</div>
+          </div>
+
+          <div class="card col-8">
+            <h3 data-i18n="salesChart">Sales & Income</h3>
+            <canvas id="salesChart" style="max-height:260px;margin-top:12px"></canvas>
+          </div>
+
+          <div class="card col-4">
+            <h3 data-i18n="totals">Totals</h3>
+            <div style="margin-top:8px">
+              <div class="small" data-i18n="totalSales">Total Sales</div>
+              <div class="stat-value" id="totalSales">0</div>
+            </div>
+            <div style="margin-top:12px">
+              <div class="small" data-i18n="totalIncome">Total Income</div>
+              <div class="stat-value" id="totalIncome">₹0</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Add Product -->
+      <section id="view-add" class="view" style="display:none;">
+        <div class="card col-12">
+          <h3 data-i18n="addProductHeading">Add Product</h3>
+          <form id="addProductForm" class="form" style="margin-top:12px">
+            <div class="form-row">
+              <input id="p_title" name="title" type="text" placeholder="Crop name" required />
+              <input id="p_price" name="price" type="number" placeholder="Price per unit (₹)" required />
+            </div>
+            <div class="form-row" style="margin-top:8px">
+              <input id="p_quantity" name="quantity" type="number" placeholder="Quantity (kg)" required />
+              <input id="p_quality" name="quality" type="text" placeholder="Quality (A/B/C)" />
+            </div>
+
+            <div style="margin-top:8px">
+              <textarea id="p_desc" name="desc" placeholder="Description (optional)" rows="2"></textarea>
+            </div>
+
+            <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+              <input id="p_image" type="file" accept="image/*" />
+              <button type="submit" class="btn">Add Product</button>
+              <div id="uploadPreview" style="margin-left:8px"></div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- My Products -->
+      <section id="view-products" class="view" style="display:none">
+        <div class="card col-12">
+          <h3 data-i18n="myProducts">My Products</h3>
+          <div style="overflow:auto;margin-top:12px">
+            <table id="productsTable">
+              <thead><tr><th data-i18n="colImage">Image</th><th data-i18n="colName">Name</th><th data-i18n="colQty">Quantity</th><th data-i18n="colQuality">Quality</th><th data-i18n="colPrice">Price</th><th data-i18n="colActions">Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Agro Waste -->
+      <section id="view-waste" class="view" style="display:none">
+        <div class="card col-12">
+          <h3 data-i18n="agroWasteHeading">Agro Waste</h3>
+          <form id="addWasteForm" style="margin-top:12px">
+            <div class="form-row">
+              <input id="w_name" type="text" placeholder="Waste item (e.g., Husk)" required />
+              <input id="w_qty" type="number" placeholder="Quantity" required />
+            </div>
+            <div class="form-row" style="margin-top:8px">
+              <select id="w_type">
+                <option value="organic">Organic</option>
+                <option value="plastic">Plastic</option>
+                <option value="metal">Metal / Scrap</option>
+                <option value="other">Other</option>
+              </select>
+              <input id="w_price" type="number" placeholder="Expected price" />
+            </div>
+            <div style="margin-top:8px"><button class="btn" type="submit">Add Waste</button></div>
+          </form>
+
+          <table style="margin-top:14px">
+            <thead><tr><th data-i18n="colName">Name</th><th data-i18n="colQty">Qty</th><th data-i18n="colType">Type</th><th data-i18n="colPrice">Price</th><th data-i18n="colActions">Actions</th></tr></thead>
+            <tbody id="wasteTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Contracts -->
+      <section id="view-contracts" class="view" style="display:none">
+        <div class="card col-12">
+          <h3 data-i18n="contractsHeading">Contracts</h3>
+
+          <form id="addContractForm" style="margin-top:12px">
+            <div class="form-row">
+              <input id="c_buyer" type="text" placeholder="Buyer name (eg Retail Mart)" required />
+              <input id="c_crop" type="text" placeholder="Crop name" required />
+            </div>
+            <div class="form-row" style="margin-top:8px">
+              <input id="c_qty" type="number" placeholder="Quantity (kg)" required />
+              <input id="c_price" type="number" placeholder="Price per kg" required />
+            </div>
+            <div style="margin-top:8px"><button class="btn" type="submit">Add Contract</button></div>
+          </form>
+
+          <div id="contractsList" style="margin-top:12px"></div>
+        </div>
+      </section>
+
+      <!-- Profile -->
+      <section id="view-profile" class="view" style="display:none">
+        <div class="card col-6">
+          <h3 data-i18n="profileHeading">Profile</h3>
+          <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+            <img id="profilePicLarge" src="" style="width:110px;height:110px;border-radius:12px;object-fit:cover"/>
+            <div>
+              <div id="profileNameLarge" style="font-weight:800">Farmer</div>
+              <div id="profileLoc">Location</div>
+              <div style="margin-top:8px"><input id="profilePicInput" type="file" accept="image/*" /></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- App script -->
+<script src="app.js"></script>
+</body>
+</html>
+
+
+
+
+
