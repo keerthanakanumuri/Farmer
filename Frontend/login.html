@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Farmer Portal - Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f5f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 { text-align: center; color: #1e7a3a; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; }
+    input {
+      width: 100%; padding: 10px; border: 1px solid #ccc;
+      border-radius: 8px; outline: none;
+    }
+    .btn {
+      width: 100%; background: #1e7a3a; color: #fff;
+      padding: 12px; border: none; border-radius: 8px;
+      cursor: pointer; font-size: 15px; font-weight: 700;
+    }
+    .toggle {
+      text-align: center; margin-top: 12px; font-size: 14px;
+    }
+    .captcha-box {
+      background: #f4f4f4; padding: 8px; border-radius: 6px;
+      margin-bottom: 8px; text-align: center; font-weight: bold; letter-spacing: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="formTitle">Login</h2>
+    <form id="authForm">
+      <div id="signupFields" style="display:none;">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="name" required />
+        </div>
+        <div class="form-group">
+          <label>Aadhaar Number</label>
+          <input type="text" id="aadhaar" maxlength="12" required />
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="phone" maxlength="10" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" required />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" required />
+      </div>
+
+      <!-- Captcha for signup -->
+      <div id="captchaArea" style="display:none;">
+        <div class="captcha-box" id="captchaText"></div>
+        <input type="text" id="captchaInput" placeholder="Enter captcha" required />
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">Login</button>
+    </form>
+    <div class="toggle">
+      <span id="toggleText">Don't have an account? <a href="#" id="switchMode">Sign Up</a></span>
+    </div>
+  </div>
+<script>
+    let isSignup = false;
+
+    const formTitle = document.getElementById("formTitle");
+    const signupFields = document.getElementById("signupFields");
+    const submitBtn = document.getElementById("submitBtn");
+    const toggleText = document.getElementById("toggleText");
+    const captchaArea = document.getElementById("captchaArea");
+    const captchaText = document.getElementById("captchaText");
+
+    // Generate random captcha
+    function generateCaptcha(){
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let captcha = "";
+      for(let i=0;i<5;i++){ captcha += chars.charAt(Math.floor(Math.random()*chars.length)); }
+      captchaText.innerText = captcha;
+      return captcha;
+    }
+
+    let currentCaptcha = generateCaptcha();
+
+    document.getElementById("switchMode").addEventListener("click", (e)=>{
+      e.preventDefault();
+      isSignup = !isSignup;
+      if(isSignup){
+        formTitle.innerText = "Sign Up";
+        signupFields.style.display = "block";
+        captchaArea.style.display = "block";
+        submitBtn.innerText = "Register";
+        toggleText.innerHTML = 'Already have an account? <a href="#" id="switchMode">Login</a>';
+        currentCaptcha = generateCaptcha();
+      } else {
+        formTitle.innerText = "Login";
+        signupFields.style.display = "none";
+        captchaArea.style.display = "none";
+        submitBtn.innerText = "Login";
+        toggleText.innerHTML = 'Don\'t have an account? <a href="#" id="switchMode">Sign Up</a>';
+      }
+      document.getElementById("switchMode").addEventListener("click", arguments.callee);
+    });
+
+    document.getElementById("authForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      if(isSignup){
+        const name = document.getElementById("name").value;
+        const aadhaar = document.getElementById("aadhaar").value;
+        const phone = document.getElementById("phone").value;
+        const captchaInput = document.getElementById("captchaInput").value;
+
+        if(captchaInput !== captchaText.innerText){ alert("Captcha incorrect!"); return; }
+
+        const user = { name,email,password,aadhaar,phone };
+        localStorage.setItem("farmerUser", JSON.stringify(user));
+        alert("Registered successfully! Please login.");
+        location.reload();
+      } else {
+        const user = JSON.parse(localStorage.getItem("farmerUser")||"{}");
+        if(user.email === email && user.password === password){
+          localStorage.setItem("loggedIn", "true");
+          window.location.href = "dashboard.html"; // your dashboard file
+        } else {
+          alert("Invalid credentials!");
+        }
+      }
+    });
+  </script>
+</body>
+</html>
